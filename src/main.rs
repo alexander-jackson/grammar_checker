@@ -5,5 +5,9 @@ fn main() {
     let contents = fs::read_to_string(input_file)
         .expect("Failed to find the file.");
 
-    dbg!(&contents);
+    let lines: Vec<String> = contents.split("\n")
+        .map(|l| l.replace("\"", "'"))
+        .collect();
+
+    dbg!(&lines);
 }
