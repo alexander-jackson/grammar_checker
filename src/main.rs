@@ -1,5 +1,7 @@
 use std::fs;
 
+use std::collections::HashSet;
+
 #[derive(Debug)]
 struct Rule<'a> {
     non_terminal: &'a str,
@@ -32,8 +34,38 @@ fn line_to_rule(line: &str) -> Rule {
     }
 }
 
+fn first<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
+    let mut set: HashSet<&'a str> = HashSet::new();
+
+    if !rules.iter().any(|x| x.non_terminal == symbol) {
+        // Symbol is a terminal node
+        set.insert(symbol);
+    } else {
+        // Symbol is a non-terminal node
+        // Find its rules
+        let mut symbol_rules: &Vec<Production<'a>> = &Vec::new();
+
+        for r in rules {
+            if r.non_terminal == symbol {
+                symbol_rules = &r.derivations;
+            }
+        }
+
+        for p in symbol_rules {
+            let children: HashSet<&'a str> = first(p.output[0], rules);
+
+            for c in children {
+                set.insert(c);
+            }
+        }
+    }
+
+    set
+}
+
 fn main() {
-    let input_file: &str = "grammar.cfg";
+    let input_file: &str = "test.cfg";
+    let start: &str = "goal";
     let contents = fs::read_to_string(input_file)
         .expect("Failed to find the file.");
 
@@ -46,5 +78,10 @@ fn main() {
         .map(|x| line_to_rule(x))
         .collect();
 
-    dbg!(&rules);
+    for r in &rules {
+        if r.non_terminal != start {
+            let symbol = r.non_terminal;
+            println!("first({}) = {:?}", symbol, first(symbol, &rules));
+        }
+    }
 }
