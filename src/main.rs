@@ -26,14 +26,10 @@ fn line_to_rule(line: &str) -> Rule {
         .map(|x| create_production(x))
         .collect();
 
-    let r = Rule {
+    Rule {
         non_terminal: split[0],
         derivations: prods,
-    };
-
-    dbg!(&r);
-
-    r
+    }
 }
 
 fn main() {
