@@ -39,7 +39,7 @@ fn main() {
 
     let lines: Vec<String> = contents.split("\n")
         .map(|l| l.replace("\"", "'"))
-        .filter(|x| x != "")
+        .filter(|x| !x.is_empty())
         .collect();
 
     let rules: Vec<Rule> = lines.iter()
