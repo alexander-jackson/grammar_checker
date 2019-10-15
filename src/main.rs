@@ -77,18 +77,18 @@ fn first<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
 /// Calculates the FOLLOW set of a symbol given the rules of the grammar
 fn follow<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
     // Find all places where the symbol occurs on the right
-    let mut interesting: Vec<(&Production, &str)> = Vec::new();
+    let mut interesting: Vec<(&str, &Production)> = Vec::new();
     let mut follow_set: HashSet<&str> = HashSet::new();
 
     for r in rules {
         for p in &r.derivations {
             if p.output.contains(&symbol) {
-                interesting.push((p, r.non_terminal));
+                interesting.push((r.non_terminal, p));
             }
         }
     }
 
-    for (p, t) in &interesting {
+    for (t, p) in &interesting {
         let pos: usize = p.output
             .iter()
             .position(|x| x == &symbol)
