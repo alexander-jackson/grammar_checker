@@ -63,17 +63,20 @@ fn first<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
     set
 }
 
+fn get_file_lines(contents: String) -> Vec<String> {
+    contents.split("\n")
+        .map(|l| l.replace("\"", "'"))
+        .filter(|x| !x.is_empty())
+        .collect()
+}
+
 fn main() {
     let input_file: &str = "test.cfg";
     let start: &str = "goal";
     let contents = fs::read_to_string(input_file)
         .expect("Failed to find the file.");
 
-    let lines: Vec<String> = contents.split("\n")
-        .map(|l| l.replace("\"", "'"))
-        .filter(|x| !x.is_empty())
-        .collect();
-
+    let lines = get_file_lines(contents);
     let rules: Vec<Rule> = lines.iter()
         .map(|x| line_to_rule(x))
         .collect();
