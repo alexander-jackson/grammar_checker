@@ -3,4 +3,14 @@
 [[package]]
 name = "grammar_checker"
 version = "0.1.0"
+dependencies = [
+ "pico-args 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
+[[package]]
+name = "pico-args"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[metadata]
+"checksum pico-args 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "22e32b0f3771287ebb436130477eabf0f11f934ed036099ad548bc885e708667"

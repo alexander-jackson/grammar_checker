@@ -1,6 +1,12 @@
 use std::fs;
+use std::error::Error;
 
 use std::collections::HashSet;
+
+struct Args {
+    filename: Option<String>,
+    key: Option<String>,
+}
 
 #[derive(Debug)]
 struct Rule<'a> {
@@ -126,9 +132,19 @@ fn get_file_lines(contents: String) -> Vec<String> {
         .collect()
 }
 
-fn main() {
-    let input_file: &str = "test.cfg";
-    // let start: &str = "goal";
+fn main() -> Result<(), Box<dyn Error>> {
+    let mut args = pico_args::Arguments::from_env();
+
+    let args = Args {
+        filename: args.opt_value_from_str("--filename")?,
+        key: args.opt_value_from_str("--key")?,
+    };
+
+    let input_file = match args.filename {
+        Some(f) => f,
+        None => panic!("Please enter a filename using --filename."),
+    };
+
     let contents = fs::read_to_string(input_file)
         .expect("Failed to find the file.");
 
@@ -137,7 +153,12 @@ fn main() {
         .map(|x| line_to_rule(x))
         .collect();
 
-    dbg!(follow("factor", &rules));
+    if let Some(k) = args.key {
+        println!("first({}) = {:?}", k, first(&k, &rules));
+        println!("follow({}) = {:?}", k, follow(&k, &rules));
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
