@@ -46,11 +46,11 @@ fn line_to_rule(line: &str) -> Rule {
 
 /// Calculates the FIRST set of a symbol given the rules of the grammar
 fn first<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
-    let mut set: HashSet<&'a str> = HashSet::new();
+    let mut first_set: HashSet<&'a str> = HashSet::new();
 
     if !rules.iter().any(|x| x.non_terminal == symbol) {
         // Symbol is a terminal node
-        set.insert(symbol);
+        first_set.insert(symbol);
     } else {
         // Symbol is a non-terminal node
         // Find its rules
@@ -66,12 +66,12 @@ fn first<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
             let children: HashSet<&'a str> = first(p.output[0], rules);
 
             for c in children {
-                set.insert(c);
+                first_set.insert(c);
             }
         }
     }
 
-    set
+    first_set
 }
 
 /// Calculates the FOLLOW set of a symbol given the rules of the grammar
