@@ -64,7 +64,59 @@ fn first<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
 }
 
 fn follow<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
-    unimplemented!();
+    // Find all places where the symbol occurs on the right
+    let mut interesting: Vec<(&Production, &str)> = Vec::new();
+    let mut follow_set: HashSet<&str> = HashSet::new();
+
+    for r in rules {
+        for p in &r.derivations {
+            if p.output.contains(&symbol) {
+                interesting.push((p, r.non_terminal));
+            }
+        }
+    }
+
+    for (p, t) in &interesting {
+        let pos: usize = p.output
+            .iter()
+            .position(|x| x == &symbol)
+            .unwrap();
+
+        let len: usize = p.output.len();
+
+        if pos + 1 == len {
+            // We are at the end of the rule
+            if t != &symbol {
+                let f: HashSet<&str> = follow(t, rules);
+
+                for e in f {
+                    follow_set.insert(e);
+                }
+            }
+        } else {
+            // Add the first set of the next token
+            let f: HashSet<&str> = first(p.output[pos + 1], rules);
+
+            for e in f {
+                if e == "epsilon" {
+                    let f2: HashSet<&str> = follow(t, rules);
+
+                    for e2 in f2 {
+                        follow_set.insert(e2);
+                    }
+                } else {
+                    follow_set.insert(e);
+                }
+            }
+        }
+    }
+
+    if interesting.is_empty() {
+        // This is the start node
+        follow_set.insert("$");
+    }
+
+    follow_set
 }
 
 fn get_file_lines(contents: String) -> Vec<String> {
@@ -76,7 +128,7 @@ fn get_file_lines(contents: String) -> Vec<String> {
 
 fn main() {
     let input_file: &str = "test.cfg";
-    let start: &str = "goal";
+    // let start: &str = "goal";
     let contents = fs::read_to_string(input_file)
         .expect("Failed to find the file.");
 
@@ -85,12 +137,7 @@ fn main() {
         .map(|x| line_to_rule(x))
         .collect();
 
-    for r in &rules {
-        if r.non_terminal != start {
-            let symbol = r.non_terminal;
-            println!("first({}) = {:?}", symbol, first(symbol, &rules));
-        }
-    }
+    dbg!(follow("factor", &rules));
 }
 
 #[cfg(test)]
