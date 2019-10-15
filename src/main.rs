@@ -21,6 +21,7 @@ struct Production<'a> {
     output: Vec<&'a str>,
 }
 
+/// Creates a Production struct from the derivations of a rule
 fn create_production(productions: &str) -> Production {
     Production {
         output: productions.split(" ")
@@ -28,6 +29,7 @@ fn create_production(productions: &str) -> Production {
     }
 }
 
+/// Creates a Rule struct from a line in the grammar file
 fn line_to_rule(line: &str) -> Rule {
     let split: Vec<&str> = line.split(" ::= ")
         .collect();
@@ -42,6 +44,7 @@ fn line_to_rule(line: &str) -> Rule {
     }
 }
 
+/// Calculates the FIRST set of a symbol given the rules of the grammar
 fn first<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
     let mut set: HashSet<&'a str> = HashSet::new();
 
@@ -71,6 +74,7 @@ fn first<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
     set
 }
 
+/// Calculates the FOLLOW set of a symbol given the rules of the grammar
 fn follow<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
     // Find all places where the symbol occurs on the right
     let mut interesting: Vec<(&Production, &str)> = Vec::new();
@@ -127,6 +131,7 @@ fn follow<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
     follow_set
 }
 
+/// Splits the lines of a grammar file up into a Vec<String>
 fn get_file_lines(contents: String) -> Vec<String> {
     contents.split("\n")
         .map(|l| l.replace("\"", "'"))
