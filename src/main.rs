@@ -6,6 +6,8 @@ use std::collections::HashSet;
 struct Args {
     filename: Option<String>,
     key: Option<String>,
+    first: bool,
+    follow: bool,
 }
 
 #[derive(Debug)]
@@ -138,6 +140,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let args = Args {
         filename: args.opt_value_from_str("--filename")?,
         key: args.opt_value_from_str("--key")?,
+        first: args.contains("--first"),
+        follow: args.contains("--follow"),
     };
 
     let input_file = match args.filename {
@@ -154,8 +158,13 @@ fn main() -> Result<(), Box<dyn Error>> {
         .collect();
 
     if let Some(k) = args.key {
-        println!("first({}) = {:?}", k, first(&k, &rules));
-        println!("follow({}) = {:?}", k, follow(&k, &rules));
+        if args.first {
+            println!("first({}) = {:?}", k, first(&k, &rules));
+        }
+
+        if args.follow {
+            println!("follow({}) = {:?}", k, follow(&k, &rules));
+        }
     }
 
     Ok(())
