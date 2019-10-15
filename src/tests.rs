@@ -51,7 +51,7 @@ fn follow_set_test() {
 
     let mut expected: HashSet<&str> = HashSet::new();
 
-    for s in &vec!["eof", ")"] {
+    for s in &vec!["$", ")"] {
         expected.insert(s);
     }
 
@@ -60,7 +60,7 @@ fn follow_set_test() {
 
     expected.clear();
 
-    for s in &vec!["eof", "+", "-", ")"] {
+    for s in &vec!["$", "+", "-", ")"] {
         expected.insert(s);
     }
 
@@ -69,9 +69,9 @@ fn follow_set_test() {
 
     expected.clear();
 
-    for s in &vec!["eof", "+", "-", ")", "*", "/"] {
+    for s in &vec!["$", "+", "-", ")", "*", "/"] {
         expected.insert(s);
     }
 
-    assert_eq!(first("factor'", &rules), expected);
+    assert_eq!(follow("factor", &rules), expected);
 }
