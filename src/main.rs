@@ -63,6 +63,10 @@ fn first<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
     set
 }
 
+fn follow<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
+    unimplemented!();
+}
+
 fn get_file_lines(contents: String) -> Vec<String> {
     contents.split("\n")
         .map(|l| l.replace("\"", "'"))

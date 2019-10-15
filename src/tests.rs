@@ -38,3 +38,40 @@ fn first_set_test() {
 
     assert_eq!(first("term'", &rules), expected);
 }
+
+#[test]
+fn follow_set_test() {
+    let contents = fs::read_to_string(TEST_GRAMMAR_PATH)
+        .expect("Failed to find the test grammar file.");
+
+    let lines = get_file_lines(contents);
+    let rules: Vec<Rule> = lines.iter()
+        .map(|x| line_to_rule(x))
+        .collect();
+
+    let mut expected: HashSet<&str> = HashSet::new();
+
+    for s in &vec!["eof", ")"] {
+        expected.insert(s);
+    }
+
+    assert_eq!(follow("expr", &rules), expected);
+    assert_eq!(follow("expr'", &rules), expected);
+
+    expected.clear();
+
+    for s in &vec!["eof", "+", "-", ")"] {
+        expected.insert(s);
+    }
+
+    assert_eq!(follow("term", &rules), expected);
+    assert_eq!(follow("term'", &rules), expected);
+
+    expected.clear();
+
+    for s in &vec!["eof", "+", "-", ")", "*", "/"] {
+        expected.insert(s);
+    }
+
+    assert_eq!(first("factor'", &rules), expected);
+}
