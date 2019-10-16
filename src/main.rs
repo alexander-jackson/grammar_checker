@@ -8,6 +8,7 @@ struct Args {
     key: Option<String>,
     first: bool,
     follow: bool,
+    first_plus: bool,
 }
 
 #[derive(Debug)]
@@ -131,6 +132,42 @@ fn follow<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
     follow_set
 }
 
+fn first_plus<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> Vec<HashSet<&'a str>> {
+    let mut first_plus_set = Vec::new();
+
+    // Check if this is a terminal
+    if !rules.iter().any(|x| x.non_terminal == symbol) {
+        return first_plus_set;
+    }
+
+    // Find the rules for this non-terminal
+    let pos: usize = rules.iter()
+        .position(|x| x.non_terminal == symbol)
+        .unwrap();
+
+    let derivations = &rules[pos].derivations;
+
+    for (i, d) in derivations.iter().enumerate() {
+        first_plus_set.push(HashSet::new());
+
+        let first_set = first(d.output[0], rules);
+
+        for f in &first_set {
+            first_plus_set[i].insert(f);
+        }
+
+        if first_set.contains("epsilon") {
+            let follow_set = follow(symbol, rules);
+
+            for f in &follow_set {
+                first_plus_set[i].insert(f);
+            }
+        }
+    }
+
+    first_plus_set
+}
+
 /// Splits the lines of a grammar file up into a Vec<String>
 fn get_file_lines(contents: String) -> Vec<String> {
     contents.split("\n")
@@ -147,6 +184,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         key: args.opt_value_from_str("--key")?,
         first: args.contains("--first"),
         follow: args.contains("--follow"),
+        first_plus: args.contains("--first_plus"),
     };
 
     let input_file = match args.filename {
@@ -169,6 +207,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         if args.follow {
             println!("follow({}) = {:?}", k, follow(&k, &rules));
+        }
+
+        if args.first_plus {
+            println!("first_plus({}) = {:?}", k, first_plus(&k, &rules));
         }
     }
 
