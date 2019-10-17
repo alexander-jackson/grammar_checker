@@ -172,12 +172,19 @@ fn first_plus<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> Vec<HashSet<&'a str
     first_plus_set
 }
 
+/// Checks whether the input string `x` is a valid string for the file
+fn valid_string(x: &str) -> bool {
+    !(x.is_empty()
+      || x.starts_with("//")
+      || x.starts_with("#")
+      || x.starts_with(";"))
+}
+
 /// Splits the lines of a grammar file up into a Vec<String>
 fn get_file_lines(contents: String) -> Vec<String> {
     contents.split("\n")
         .map(|l| l.replace("\"", "'"))
-        .filter(|x| !x.is_empty())
-        .filter(|x| !x.contains("//"))
+        .filter(|x| valid_string(x))
         .collect()
 }
 
