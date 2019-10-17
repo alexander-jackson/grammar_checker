@@ -55,13 +55,10 @@ fn first<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
     } else {
         // Symbol is a non-terminal node
         // Find its rules
-        let mut symbol_rules: &Vec<Production<'a>> = &Vec::new();
-
-        for r in rules {
-            if r.non_terminal == symbol {
-                symbol_rules = &r.derivations;
-            }
-        }
+        let symbol_rules: &Vec<Production<'a>> = &rules.iter()
+            .find(|r| r.non_terminal == symbol)
+            .unwrap()
+            .derivations;
 
         for p in symbol_rules {
             let children: HashSet<&'a str> = first(p.output[0], rules);
@@ -77,13 +74,14 @@ fn first<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
 
 /// Calculates the FOLLOW set of a symbol given the rules of the grammar
 fn follow<'a>((symbol, orig, d): (&'a str, &'a str, i32), rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
-    // Find all places where the symbol occurs on the right
-    let mut interesting: Vec<(&str, &Production)> = Vec::new();
     let mut follow_set: HashSet<&str> = HashSet::new();
 
     if symbol == orig && d != 0 {
         return follow_set;
     }
+
+    // Find all places where the symbol occurs on the right
+    let mut interesting: Vec<(&str, &Production)> = Vec::new();
 
     for r in rules {
         for p in &r.derivations {
