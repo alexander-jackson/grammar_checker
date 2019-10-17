@@ -11,6 +11,7 @@ struct Args {
     first: bool,
     follow: bool,
     first_plus: bool,
+    check_first_plus: bool,
 }
 
 #[derive(Debug)]
@@ -206,30 +207,16 @@ fn get_file_lines(contents: String) -> Vec<String> {
         .collect()
 }
 
-fn display_all<'a>(rules: &Vec<Rule<'a>>, (args_first, args_follow, args_first_plus): (bool, bool, bool)) {
+fn check_first_plus<'a>(rules: &Vec<Rule<'a>>) {
     // Iterate all the non-terminals
-    if args_first {
-        for r in rules {
-            println!("first({}) = {:?}", r.non_terminal, first(r.non_terminal, rules));
-        }
-    }
+    for r in rules {
+        let sets = first_plus(&r.non_terminal, &rules);
+        let output: String = format!("first_plus({}) = {:?}", r.non_terminal, sets);
 
-    if args_follow {
-        for r in rules {
-            println!("follow({}) = {:?}", r.non_terminal, follow((r.non_terminal, &mut Vec::new()), rules));
-        }
-    }
-
-    if args_first_plus {
-        for r in rules {
-            let sets = first_plus(&r.non_terminal, &rules);
-            let output: String = format!("first_plus({}) = {:?}", r.non_terminal, sets);
-
-            if disjoint(&sets) {
-                println!("{}", output.green());
-            } else {
-                println!("{}", output.red());
-            }
+        if disjoint(&sets) {
+            println!("{}", output.green());
+        } else {
+            println!("{}", output.red());
         }
     }
 }
@@ -243,6 +230,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         first: args.contains("--first"),
         follow: args.contains("--follow"),
         first_plus: args.contains("--first_plus"),
+        check_first_plus: args.contains("--check_first_plus"),
     };
 
     let input_file = match args.filename {
@@ -258,27 +246,27 @@ fn main() -> Result<(), Box<dyn Error>> {
         .map(|x| line_to_rule(x))
         .collect();
 
+    if args.check_first_plus {
+        check_first_plus(&rules);
+    }
+
     if let Some(k) = args.key {
-        if k == "--all" {
-            display_all(&rules, (args.first, args.follow, args.first_plus));
-        } else {
-            if args.first {
-                println!("first({}) = {:?}", k, first(&k, &rules));
-            }
+        if args.first {
+            println!("first({}) = {:?}", k, first(&k, &rules));
+        }
 
-            if args.follow {
-                println!("follow({}) = {:?}", k, follow((&k, &mut Vec::new()), &rules));
-            }
+        if args.follow {
+            println!("follow({}) = {:?}", k, follow((&k, &mut Vec::new()), &rules));
+        }
 
-            if args.first_plus {
-                let sets = first_plus(&k, &rules);
-                let output: String = format!("first_plus({}) = {:?}", k, sets);
+        if args.first_plus {
+            let sets = first_plus(&k, &rules);
+            let output: String = format!("first_plus({}) = {:?}", k, sets);
 
-                if disjoint(&sets) {
-                    println!("{}", output.green());
-                } else {
-                    println!("{}", output.red());
-                }
+            if disjoint(&sets) {
+                println!("{}", output.green());
+            } else {
+                println!("{}", output.red());
             }
         }
     }
