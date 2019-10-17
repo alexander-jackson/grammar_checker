@@ -188,6 +188,27 @@ fn get_file_lines(contents: String) -> Vec<String> {
         .collect()
 }
 
+fn display_all<'a>(rules: &Vec<Rule<'a>>, (args_first, args_follow, args_first_plus): (bool, bool, bool)) {
+    // Iterate all the non-terminals
+    if args_first {
+        for r in rules {
+            println!("first({}) = {:?}", r.non_terminal, first(r.non_terminal, rules));
+        }
+    }
+
+    if args_follow {
+        for r in rules {
+            println!("follow({}) = {:?}", r.non_terminal, follow((r.non_terminal, &mut Vec::new()), rules));
+        }
+    }
+
+    if args_first_plus {
+        for r in rules {
+            println!("first_plus({}) = {:?}", r.non_terminal, first_plus(r.non_terminal, rules));
+        }
+    }
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let mut args = pico_args::Arguments::from_env();
 
@@ -213,16 +234,20 @@ fn main() -> Result<(), Box<dyn Error>> {
         .collect();
 
     if let Some(k) = args.key {
-        if args.first {
-            println!("first({}) = {:?}", k, first(&k, &rules));
-        }
+        if k == "--all" {
+            display_all(&rules, (args.first, args.follow, args.first_plus));
+        } else {
+            if args.first {
+                println!("first({}) = {:?}", k, first(&k, &rules));
+            }
 
-        if args.follow {
-            println!("follow({}) = {:?}", k, follow((&k, &mut Vec::new()), &rules));
-        }
+            if args.follow {
+                println!("follow({}) = {:?}", k, follow((&k, &mut Vec::new()), &rules));
+            }
 
-        if args.first_plus {
-            println!("first_plus({}) = {:?}", k, first_plus(&k, &rules));
+            if args.first_plus {
+                println!("first_plus({}) = {:?}", k, first_plus(&k, &rules));
+            }
         }
     }
 
