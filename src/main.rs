@@ -73,10 +73,10 @@ fn first<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
 }
 
 /// Calculates the FOLLOW set of a symbol given the rules of the grammar
-fn follow<'a>((symbol, orig, d): (&'a str, &'a str, i32), rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
+fn follow<'a, 'b>((symbol, stack): (&'a str, &'b mut Vec<&'a str>), rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
     let mut follow_set: HashSet<&str> = HashSet::new();
 
-    if symbol == orig && d != 0 {
+    if stack.contains(&symbol) {
         return follow_set;
     }
 
@@ -102,7 +102,8 @@ fn follow<'a>((symbol, orig, d): (&'a str, &'a str, i32), rules: &Vec<Rule<'a>>)
         if pos + 1 == len {
             // We are at the end of the rule
             if t != &symbol {
-                let f: HashSet<&str> = follow((t, orig, d + 1), rules);
+                stack.push(symbol);
+                let f: HashSet<&str> = follow((t, stack), rules);
 
                 for e in f {
                     follow_set.insert(e);
@@ -114,7 +115,8 @@ fn follow<'a>((symbol, orig, d): (&'a str, &'a str, i32), rules: &Vec<Rule<'a>>)
 
             for e in f {
                 if e == "epsilon" {
-                    let f2: HashSet<&str> = follow((t, orig, d + 1), rules);
+                    stack.push(symbol);
+                    let f2: HashSet<&str> = follow((t, stack), rules);
 
                     for e2 in f2 {
                         follow_set.insert(e2);
@@ -159,7 +161,7 @@ fn first_plus<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> Vec<HashSet<&'a str
         }
 
         if first_set.contains("epsilon") {
-            let follow_set = follow((symbol, symbol, 0), rules);
+            let follow_set = follow((symbol, &mut Vec::new()), rules);
 
             for f in &follow_set {
                 first_plus_set[i].insert(f);
@@ -216,7 +218,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
 
         if args.follow {
-            println!("follow({}) = {:?}", k, follow((&k, &k, 0), &rules));
+            println!("follow({}) = {:?}", k, follow((&k, &mut Vec::new()), &rules));
         }
 
         if args.first_plus {
