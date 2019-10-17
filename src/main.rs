@@ -173,6 +173,7 @@ fn get_file_lines(contents: String) -> Vec<String> {
     contents.split("\n")
         .map(|l| l.replace("\"", "'"))
         .filter(|x| !x.is_empty())
+        .filter(|x| !x.contains("//"))
         .collect()
 }
 
