@@ -50,16 +50,16 @@ fn follow_set_test() {
         .collect();
 
     let mut expected: HashSet<&str> = HashSet::new();
-    let mut key: &str;
+    let mut stack: Vec<&str> = Vec::new();
 
     for s in &vec!["$", ")"] {
         expected.insert(s);
     }
 
-    key = "expr";
-    assert_eq!(follow((key, key, 0), &rules), expected);
-    key = "expr'";
-    assert_eq!(follow((key, key, 0), &rules), expected);
+    assert_eq!(follow(("expr", &mut stack), &rules), expected);
+    stack.clear();
+    assert_eq!(follow(("expr'", &mut stack), &rules), expected);
+    stack.clear();
 
     expected.clear();
 
@@ -67,10 +67,10 @@ fn follow_set_test() {
         expected.insert(s);
     }
 
-    key = "term";
-    assert_eq!(follow((key, key, 0), &rules), expected);
-    key = "term'";
-    assert_eq!(follow((key, key, 0), &rules), expected);
+    assert_eq!(follow(("term", &mut stack), &rules), expected);
+    stack.clear();
+    assert_eq!(follow(("term'", &mut stack), &rules), expected);
+    stack.clear();
 
     expected.clear();
 
@@ -78,6 +78,6 @@ fn follow_set_test() {
         expected.insert(s);
     }
 
-    key = "factor";
-    assert_eq!(follow((key, key, 0), &rules), expected);
+    assert_eq!(follow(("factor", &mut stack), &rules), expected);
+    stack.clear();
 }
