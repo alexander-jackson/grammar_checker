@@ -3,6 +3,8 @@ use std::error::Error;
 
 use std::collections::HashSet;
 
+use colored::*;
+
 struct Args {
     filename: Option<String>,
     key: Option<String>,
@@ -172,6 +174,22 @@ fn first_plus<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> Vec<HashSet<&'a str
     first_plus_set
 }
 
+/// Checks whether all the HashSets are disjoint from each other
+fn disjoint<'a>(sets: &'a Vec<HashSet<&'a str>>) -> bool {
+    let mut values: HashSet<&'a str> = HashSet::new();
+
+    // Iterate the sets
+    for set in sets {
+        for value in set {
+            if !values.insert(value) {
+                return false;
+            }
+        }
+    }
+
+    true
+}
+
 /// Checks whether the input string `x` is a valid string for the file
 fn valid_string(x: &str) -> bool {
     !(x.is_empty()
@@ -204,7 +222,14 @@ fn display_all<'a>(rules: &Vec<Rule<'a>>, (args_first, args_follow, args_first_p
 
     if args_first_plus {
         for r in rules {
-            println!("first_plus({}) = {:?}", r.non_terminal, first_plus(r.non_terminal, rules));
+            let sets = first_plus(&r.non_terminal, &rules);
+            let output: String = format!("first_plus({}) = {:?}", r.non_terminal, sets);
+
+            if disjoint(&sets) {
+                println!("{}", output.green());
+            } else {
+                println!("{}", output.red());
+            }
         }
     }
 }
@@ -246,7 +271,14 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
 
             if args.first_plus {
-                println!("first_plus({}) = {:?}", k, first_plus(&k, &rules));
+                let sets = first_plus(&k, &rules);
+                let output: String = format!("first_plus({}) = {:?}", k, sets);
+
+                if disjoint(&sets) {
+                    println!("{}", output.green());
+                } else {
+                    println!("{}", output.red());
+                }
             }
         }
     }
