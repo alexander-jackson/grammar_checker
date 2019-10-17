@@ -76,10 +76,14 @@ fn first<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
 }
 
 /// Calculates the FOLLOW set of a symbol given the rules of the grammar
-fn follow<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
+fn follow<'a>((symbol, orig, d): (&'a str, &'a str, i32), rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
     // Find all places where the symbol occurs on the right
     let mut interesting: Vec<(&str, &Production)> = Vec::new();
     let mut follow_set: HashSet<&str> = HashSet::new();
+
+    if symbol == orig && d != 0 {
+        return follow_set;
+    }
 
     for r in rules {
         for p in &r.derivations {
@@ -100,7 +104,7 @@ fn follow<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
         if pos + 1 == len {
             // We are at the end of the rule
             if t != &symbol {
-                let f: HashSet<&str> = follow(t, rules);
+                let f: HashSet<&str> = follow((t, orig, d + 1), rules);
 
                 for e in f {
                     follow_set.insert(e);
@@ -112,7 +116,7 @@ fn follow<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
 
             for e in f {
                 if e == "epsilon" {
-                    let f2: HashSet<&str> = follow(t, rules);
+                    let f2: HashSet<&str> = follow((t, orig, d + 1), rules);
 
                     for e2 in f2 {
                         follow_set.insert(e2);
@@ -157,7 +161,7 @@ fn first_plus<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> Vec<HashSet<&'a str
         }
 
         if first_set.contains("epsilon") {
-            let follow_set = follow(symbol, rules);
+            let follow_set = follow((symbol, symbol, 0), rules);
 
             for f in &follow_set {
                 first_plus_set[i].insert(f);
@@ -207,7 +211,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
 
         if args.follow {
-            println!("follow({}) = {:?}", k, follow(&k, &rules));
+            println!("follow({}) = {:?}", k, follow((&k, &k, 0), &rules));
         }
 
         if args.first_plus {
