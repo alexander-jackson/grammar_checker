@@ -202,9 +202,35 @@ fn valid_string(x: &str) -> bool {
 /// Splits the lines of a grammar file up into a Vec<String>
 fn get_file_lines(contents: String) -> Vec<String> {
     contents.split("\n")
-        .map(|l| l.replace("\"", "'"))
         .filter(|x| valid_string(x))
+        .map(|l| l.trim())
+        .map(|l| l.replace("\"", "'"))
         .collect()
+}
+
+fn join_lines(lines: &Vec<String>) -> Vec<String> {
+    let mut joined: Vec<String> = Vec::new();
+
+    // Get the line numbers that start a rule definition
+    let containing: Vec<usize> = lines.iter()
+        .enumerate()
+        .map(|(i, l)| (i, l.contains("::=")))
+        .filter(|(_i, l)| *l)
+        .map(|(i, _l)| i)
+        .collect();
+
+    let len = containing.len();
+
+    for c in 0..len - 1 {
+        let (i, j) = (containing[c], containing[c + 1]);
+
+        joined.push(lines[i..j].join(" "));
+    }
+
+    let last = containing[len - 1];
+    joined.push(lines[last..lines.len()].join(" "));
+
+    joined
 }
 
 fn check_first_plus<'a>(rules: &Vec<Rule<'a>>) {
@@ -242,7 +268,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         .expect("Failed to find the file.");
 
     let lines = get_file_lines(contents);
-    let rules: Vec<Rule> = lines.iter()
+    let joined = join_lines(&lines);
+    dbg!(&joined);
+    let rules: Vec<Rule> = joined.iter()
         .map(|x| line_to_rule(x))
         .collect();
 
