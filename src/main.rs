@@ -251,22 +251,32 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     if let Some(k) = args.key {
-        if args.first {
-            println!("first({}) = {:?}", k, first(&k, &rules));
-        }
+        let keys: Vec<&str> = if k.contains(",") {
+            k.split(",")
+                .map(|x| x.trim())
+                .collect()
+        } else {
+            vec![&k]
+        };
 
-        if args.follow {
-            println!("follow({}) = {:?}", k, follow((&k, &mut Vec::new()), &rules));
-        }
+        for key in keys {
+            if args.first {
+                println!("first({}) = {:?}", key, first(&key, &rules));
+            }
 
-        if args.first_plus {
-            let sets = first_plus(&k, &rules);
-            let output: String = format!("first_plus({}) = {:?}", k, sets);
+            if args.follow {
+                println!("follow({}) = {:?}", key, follow((&key, &mut Vec::new()), &rules));
+            }
 
-            if disjoint(&sets) {
-                println!("{}", output.green());
-            } else {
-                println!("{}", output.red());
+            if args.first_plus {
+                let sets = first_plus(&key, &rules);
+                let output: String = format!("first_plus({}) = {:?}", key, sets);
+
+                if disjoint(&sets) {
+                    println!("{}", output.green());
+                } else {
+                    println!("{}", output.red());
+                }
             }
         }
     }
