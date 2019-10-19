@@ -269,7 +269,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let lines = get_file_lines(contents);
     let joined = join_lines(&lines);
-    dbg!(&joined);
     let rules: Vec<Rule> = joined.iter()
         .map(|x| line_to_rule(x))
         .collect();
