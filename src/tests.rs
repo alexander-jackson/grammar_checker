@@ -4,13 +4,11 @@ static TEST_GRAMMAR_PATH: &str = "test.cfg";
 
 #[test]
 fn first_set_test() {
-    let contents = fs::read_to_string(TEST_GRAMMAR_PATH)
-        .expect("Failed to find the test grammar file.");
+    let contents =
+        fs::read_to_string(TEST_GRAMMAR_PATH).expect("Failed to find the test grammar file.");
 
     let lines = get_file_lines(contents);
-    let rules: Vec<Rule> = lines.iter()
-        .map(|x| line_to_rule(x))
-        .collect();
+    let rules: Vec<Rule> = lines.iter().map(|x| line_to_rule(x)).collect();
 
     let mut expected: HashSet<&str> = HashSet::new();
 
@@ -41,13 +39,11 @@ fn first_set_test() {
 
 #[test]
 fn follow_set_test() {
-    let contents = fs::read_to_string(TEST_GRAMMAR_PATH)
-        .expect("Failed to find the test grammar file.");
+    let contents =
+        fs::read_to_string(TEST_GRAMMAR_PATH).expect("Failed to find the test grammar file.");
 
     let lines = get_file_lines(contents);
-    let rules: Vec<Rule> = lines.iter()
-        .map(|x| line_to_rule(x))
-        .collect();
+    let rules: Vec<Rule> = lines.iter().map(|x| line_to_rule(x)).collect();
 
     let mut expected: HashSet<&str> = HashSet::new();
     let mut stack: Vec<&str> = Vec::new();
