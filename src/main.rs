@@ -1,5 +1,7 @@
-use std::fs;
 use std::error::Error;
+use std::fs;
+use std::fs::OpenOptions;
+use std::io::Write;
 
 use std::collections::HashSet;
 
@@ -12,6 +14,8 @@ struct Args {
     follow: bool,
     first_plus: bool,
     check_first_plus: bool,
+    show_mappings: bool,
+    protos: Option<String>,
 }
 
 #[derive(Debug)]
@@ -28,17 +32,16 @@ struct Production<'a> {
 /// Creates a Production struct from the derivations of a rule
 fn create_production(productions: &str) -> Production {
     Production {
-        output: productions.split(" ")
-            .collect()
+        output: productions.split(" ").collect(),
     }
 }
 
 /// Creates a Rule struct from a line in the grammar file
 fn line_to_rule(line: &str) -> Rule {
-    let split: Vec<&str> = line.split(" ::= ")
-        .collect();
+    let split: Vec<&str> = line.split(" ::= ").collect();
 
-    let prods: Vec<Production> = split[1].split(" | ")
+    let prods: Vec<Production> = split[1]
+        .split(" | ")
         .map(|x| create_production(x))
         .collect();
 
@@ -58,7 +61,8 @@ fn first<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
     } else {
         // Symbol is a non-terminal node
         // Find its rules
-        let symbol_rules: &Vec<Production<'a>> = &rules.iter()
+        let symbol_rules: &Vec<Production<'a>> = &rules
+            .iter()
             .find(|r| r.non_terminal == symbol)
             .unwrap()
             .derivations;
@@ -76,7 +80,10 @@ fn first<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
 }
 
 /// Calculates the FOLLOW set of a symbol given the rules of the grammar
-fn follow<'a, 'b>((symbol, stack): (&'a str, &'b mut Vec<&'a str>), rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
+fn follow<'a, 'b>(
+    (symbol, stack): (&'a str, &'b mut Vec<&'a str>),
+    rules: &Vec<Rule<'a>>,
+) -> HashSet<&'a str> {
     let mut follow_set: HashSet<&str> = HashSet::new();
 
     if stack.contains(&symbol) {
@@ -95,10 +102,7 @@ fn follow<'a, 'b>((symbol, stack): (&'a str, &'b mut Vec<&'a str>), rules: &Vec<
     }
 
     for (t, p) in &interesting {
-        let pos: usize = p.output
-            .iter()
-            .position(|x| x == &symbol)
-            .unwrap();
+        let pos: usize = p.output.iter().position(|x| x == &symbol).unwrap();
 
         let len: usize = p.output.len();
 
@@ -148,9 +152,7 @@ fn first_plus<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> Vec<HashSet<&'a str
     }
 
     // Find the rules for this non-terminal
-    let pos: usize = rules.iter()
-        .position(|x| x.non_terminal == symbol)
-        .unwrap();
+    let pos: usize = rules.iter().position(|x| x.non_terminal == symbol).unwrap();
 
     let derivations = &rules[pos].derivations;
 
@@ -193,15 +195,13 @@ fn disjoint<'a>(sets: &'a Vec<HashSet<&'a str>>) -> bool {
 
 /// Checks whether the input string `x` is a valid string for the file
 fn valid_string(x: &str) -> bool {
-    !(x.is_empty()
-      || x.starts_with("//")
-      || x.starts_with("#")
-      || x.starts_with(";"))
+    !(x.is_empty() || x.starts_with("//") || x.starts_with("#") || x.starts_with(";"))
 }
 
 /// Splits the lines of a grammar file up into a Vec<String>
 fn get_file_lines(contents: String) -> Vec<String> {
-    contents.split("\n")
+    contents
+        .split("\n")
         .filter(|x| valid_string(x))
         .map(|l| l.trim())
         .map(|l| l.replace("\"", "'"))
@@ -212,7 +212,8 @@ fn join_lines(lines: &Vec<String>) -> Vec<String> {
     let mut joined: Vec<String> = Vec::new();
 
     // Get the line numbers that start a rule definition
-    let containing: Vec<usize> = lines.iter()
+    let containing: Vec<usize> = lines
+        .iter()
         .enumerate()
         .map(|(i, l)| (i, l.contains("::=")))
         .filter(|(_i, l)| *l)
@@ -237,6 +238,7 @@ fn check_first_plus<'a>(rules: &Vec<Rule<'a>>) {
     // Iterate all the non-terminals
     for r in rules {
         let sets = first_plus(&r.non_terminal, &rules);
+
         let output: String = format!("first_plus({}) = {:?}", r.non_terminal, sets);
 
         if disjoint(&sets) {
@@ -244,6 +246,51 @@ fn check_first_plus<'a>(rules: &Vec<Rule<'a>>) {
         } else {
             println!("{}", output.red());
         }
+    }
+}
+
+fn show_mappings<'a>(key: &str, rules: &Vec<Rule<'a>>) {
+    println!("{}", key.green());
+
+    if !rules.iter().any(|x| x.non_terminal == key) {
+        println!("This is a terminal node.");
+    } else {
+        let first_plus_set = first_plus(key, rules);
+        let derivations = &rules
+            .iter()
+            .find(|x| x.non_terminal == key)
+            .unwrap()
+            .derivations;
+
+        for (f, d) in first_plus_set.iter().zip(derivations.iter()) {
+            println!("{:?} => {:?}", f, d);
+        }
+    }
+}
+
+fn generate_prototypes<'a>(path: String, rules: &Vec<Rule<'a>>, joined: &Vec<String>) {
+    let lines: Vec<String> = rules
+        .iter()
+        .zip(joined.iter())
+        .map(|(r, j)| {
+            format!(
+                r#"// {}
+void parse_{}();
+
+"#,
+                j, r.non_terminal
+            )
+        })
+        .collect();
+
+    let mut file = OpenOptions::new()
+        .create_new(true)
+        .append(true)
+        .open(&path)
+        .unwrap();
+
+    for l in lines {
+        write!(file, "{}", l).expect("Failed to write to the file.");
     }
 }
 
@@ -257,6 +304,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         follow: args.contains("--follow"),
         first_plus: args.contains("--first_plus"),
         check_first_plus: args.contains("--check_first_plus"),
+        show_mappings: args.contains("--show_mappings"),
+        protos: args.opt_value_from_str("--protos")?,
     };
 
     let input_file = match args.filename {
@@ -264,14 +313,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         None => panic!("Please enter a filename using --filename."),
     };
 
-    let contents = fs::read_to_string(input_file)
-        .expect("Failed to find the file.");
+    let contents = fs::read_to_string(input_file).expect("Failed to find the file.");
 
     let lines = get_file_lines(contents);
     let joined = join_lines(&lines);
-    let rules: Vec<Rule> = joined.iter()
-        .map(|x| line_to_rule(x))
-        .collect();
+    let rules: Vec<Rule> = joined.iter().map(|x| line_to_rule(x)).collect();
 
     if args.check_first_plus {
         check_first_plus(&rules);
@@ -279,9 +325,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     if let Some(k) = args.key {
         let keys: Vec<&str> = if k.contains(",") {
-            k.split(",")
-                .map(|x| x.trim())
-                .collect()
+            k.split(",").map(|x| x.trim()).collect()
         } else {
             vec![&k]
         };
@@ -292,7 +336,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
 
             if args.follow {
-                println!("follow({}) = {:?}", key, follow((&key, &mut Vec::new()), &rules));
+                println!(
+                    "follow({}) = {:?}",
+                    key,
+                    follow((&key, &mut Vec::new()), &rules)
+                );
             }
 
             if args.first_plus {
@@ -305,7 +353,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                     println!("{}", output.red());
                 }
             }
+
+            if args.show_mappings {
+                show_mappings(&key, &rules);
+            }
         }
+    }
+
+    if let Some(f) = args.protos {
+        generate_prototypes(f, &rules, &joined);
     }
 
     Ok(())
