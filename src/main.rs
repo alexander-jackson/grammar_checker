@@ -32,7 +32,7 @@ struct Production<'a> {
 /// Creates a Production struct from the derivations of a rule
 fn create_production(productions: &str) -> Production {
     Production {
-        output: productions.split(" ").collect(),
+        output: productions.split(' ').collect(),
     }
 }
 
@@ -52,7 +52,7 @@ fn line_to_rule(line: &str) -> Rule {
 }
 
 /// Calculates the FIRST set of a symbol given the rules of the grammar
-fn first<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
+fn first<'a>(symbol: &'a str, rules: &[Rule<'a>]) -> HashSet<&'a str> {
     let mut first_set: HashSet<&'a str> = HashSet::new();
 
     if !rules.iter().any(|x| x.non_terminal == symbol) {
@@ -82,7 +82,7 @@ fn first<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> HashSet<&'a str> {
 /// Calculates the FOLLOW set of a symbol given the rules of the grammar
 fn follow<'a, 'b>(
     (symbol, stack): (&'a str, &'b mut Vec<&'a str>),
-    rules: &Vec<Rule<'a>>,
+    rules: &[Rule<'a>],
 ) -> HashSet<&'a str> {
     let mut follow_set: HashSet<&str> = HashSet::new();
 
@@ -143,7 +143,7 @@ fn follow<'a, 'b>(
     follow_set
 }
 
-fn first_plus<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> Vec<HashSet<&'a str>> {
+fn first_plus<'a>(symbol: &'a str, rules: &[Rule<'a>]) -> Vec<HashSet<&'a str>> {
     let mut first_plus_set = Vec::new();
 
     // Check if this is a terminal
@@ -178,7 +178,7 @@ fn first_plus<'a>(symbol: &'a str, rules: &Vec<Rule<'a>>) -> Vec<HashSet<&'a str
 }
 
 /// Checks whether all the HashSets are disjoint from each other
-fn disjoint<'a>(sets: &'a Vec<HashSet<&'a str>>) -> bool {
+fn disjoint<'a>(sets: &'a [HashSet<&'a str>]) -> bool {
     let mut values: HashSet<&'a str> = HashSet::new();
 
     // Iterate the sets
@@ -195,20 +195,20 @@ fn disjoint<'a>(sets: &'a Vec<HashSet<&'a str>>) -> bool {
 
 /// Checks whether the input string `x` is a valid string for the file
 fn valid_string(x: &str) -> bool {
-    !(x.is_empty() || x.starts_with("//") || x.starts_with("#") || x.starts_with(";"))
+    !(x.is_empty() || x.starts_with("//") || x.starts_with('#') || x.starts_with(';'))
 }
 
 /// Splits the lines of a grammar file up into a Vec<String>
 fn get_file_lines(contents: String) -> Vec<String> {
     contents
-        .split("\n")
+        .split('\n')
         .filter(|x| valid_string(x))
         .map(|l| l.trim())
         .map(|l| l.replace("\"", "'"))
         .collect()
 }
 
-fn join_lines(lines: &Vec<String>) -> Vec<String> {
+fn join_lines(lines: &[String]) -> Vec<String> {
     let mut joined: Vec<String> = Vec::new();
 
     // Get the line numbers that start a rule definition
@@ -234,7 +234,7 @@ fn join_lines(lines: &Vec<String>) -> Vec<String> {
     joined
 }
 
-fn check_first_plus<'a>(rules: &Vec<Rule<'a>>) {
+fn check_first_plus<'a>(rules: &[Rule<'a>]) {
     // Iterate all the non-terminals
     for r in rules {
         let sets = first_plus(&r.non_terminal, &rules);
@@ -249,7 +249,7 @@ fn check_first_plus<'a>(rules: &Vec<Rule<'a>>) {
     }
 }
 
-fn show_mappings<'a>(key: &str, rules: &Vec<Rule<'a>>) {
+fn show_mappings<'a>(key: &str, rules: &[Rule<'a>]) {
     println!("{}", key.green());
 
     if !rules.iter().any(|x| x.non_terminal == key) {
@@ -268,7 +268,7 @@ fn show_mappings<'a>(key: &str, rules: &Vec<Rule<'a>>) {
     }
 }
 
-fn generate_prototypes<'a>(path: String, rules: &Vec<Rule<'a>>, joined: &Vec<String>) {
+fn generate_prototypes<'a>(path: String, rules: &[Rule<'a>], joined: &[String]) {
     let lines: Vec<String> = rules
         .iter()
         .zip(joined.iter())
@@ -324,8 +324,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     if let Some(k) = args.key {
-        let keys: Vec<&str> = if k.contains(",") {
-            k.split(",").map(|x| x.trim()).collect()
+        let keys: Vec<&str> = if k.contains(',') {
+            k.split(',').map(|x| x.trim()).collect()
         } else {
             vec![&k]
         };
