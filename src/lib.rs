@@ -1,8 +1,8 @@
+use std::convert::TryFrom;
 use std::error::Error;
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::convert::TryFrom;
 
 use std::collections::HashSet;
 
@@ -28,7 +28,10 @@ pub struct Rule<'a> {
 
 impl<'a> Rule<'a> {
     pub fn new(non_terminal: &'a str, derivations: Vec<Production<'a>>) -> Self {
-        Self { non_terminal, derivations }
+        Self {
+            non_terminal,
+            derivations,
+        }
     }
 }
 
@@ -313,7 +316,7 @@ fn generate_code<'a>(
     non_terminal: &str,
     f_plus: &[HashSet<&str>],
     derivations: &[Production<'a>],
-    terminals: &[&str]
+    terminals: &[&str],
 ) {
     let mut output: String = String::new();
     let fname: &str = &format!("parse_{}", non_terminal);
@@ -434,7 +437,10 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 
     let lines = get_file_lines(contents);
     let joined = join_lines(&lines);
-    let rules: Vec<Rule> = joined.iter().map(|x| Rule::try_from(&x[..]).unwrap()).collect();
+    let rules: Vec<Rule> = joined
+        .iter()
+        .map(|x| Rule::try_from(&x[..]).unwrap())
+        .collect();
 
     if args.check_first_plus {
         check_first_plus(&rules);
