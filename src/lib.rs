@@ -31,9 +31,7 @@ pub fn first<'a>(symbol: &'a str, rules: &[Rule<'a>]) -> HashSet<&'a str> {
             .derivations;
 
         for p in symbol_rules {
-            let children: HashSet<&'a str> = first(p.output[0], rules);
-
-            for c in children {
+            for c in first(p.output[0], rules) {
                 first_set.insert(c);
             }
         }
@@ -65,9 +63,8 @@ pub fn follow<'a, 'b>(
     }
 
     for (t, p) in &interesting {
-        let pos: usize = p.output.iter().position(|x| x == &symbol).unwrap();
-
         let len: usize = p.output.len();
+        let pos: usize = p.output.iter().position(|x| x == &symbol).unwrap();
 
         if pos + 1 == len {
             // We are at the end of the rule
@@ -99,7 +96,7 @@ pub fn follow<'a, 'b>(
     }
 
     if interesting.is_empty() {
-        // This is the start node
+        // This has nothing following it
         follow_set.insert("$");
     }
 
@@ -116,7 +113,6 @@ pub fn first_plus<'a>(symbol: &'a str, rules: &[Rule<'a>]) -> Vec<HashSet<&'a st
 
     // Find the rules for this non-terminal
     let pos: usize = rules.iter().position(|x| x.non_terminal == symbol).unwrap();
-
     let derivations = &rules[pos].derivations;
 
     for (i, d) in derivations.iter().enumerate() {
@@ -267,8 +263,6 @@ fn generate_code<'a>(
     let fname: &str = &format!("parse_{}", non_terminal);
     output.push_str(&format!("void {}() {{\n", fname));
 
-    output.push_str(&format!("std::cout << \"Calling {}\" << std::endl;", fname));
-
     let mut iters = 0;
 
     for (f, d) in f_plus.iter().zip(derivations.iter()) {
@@ -295,7 +289,7 @@ fn generate_code<'a>(
                     format!("match_terminal({});", x)
                 } else {
                     format!(
-                        "parse_{}();\nstd::cout << \"Returned to {}\" << std::endl;",
+                        "parse_{}();\n",
                         x, fname
                     )
                 }
