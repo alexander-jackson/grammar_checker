@@ -7,7 +7,7 @@ use colored::*;
 use crate::*;
 
 pub struct Args {
-    filename: Option<String>,
+    filename: String,
     key: Option<String>,
     first: bool,
     follow: bool,
@@ -22,7 +22,7 @@ pub fn parse_args() -> Result<Args, Box<dyn Error>> {
     let mut args = pico_args::Arguments::from_env();
 
     let args = Args {
-        filename: args.opt_value_from_str("--filename")?,
+        filename: args.value_from_str("--filename")?,
         key: args.opt_value_from_str("--key")?,
         first: args.contains("--first"),
         follow: args.contains("--follow"),
@@ -37,11 +37,7 @@ pub fn parse_args() -> Result<Args, Box<dyn Error>> {
 }
 
 pub fn handle_args(args: Args) -> Result<(), Box<dyn Error>> {
-    let input_file = match args.filename {
-        Some(f) => f,
-        None => panic!("Please enter a filename using --filename."),
-    };
-
+    let input_file: String = args.filename;
     let contents = fs::read_to_string(input_file).expect("Failed to find the file.");
 
     let lines = get_file_lines(contents);
