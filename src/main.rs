@@ -25,16 +25,26 @@ struct Rule<'a> {
     derivations: Vec<Production<'a>>,
 }
 
+impl<'a> Rule<'a> {
+    pub fn new(non_terminal: &'a str, derivations: Vec<Production<'a>>) -> Self {
+        Self { non_terminal, derivations }
+    }
+}
+
 #[derive(Debug)]
 struct Production<'a> {
     output: Vec<&'a str>,
 }
 
+impl<'a> Production<'a> {
+    pub fn new(output: Vec<&'a str>) -> Self {
+        Self { output }
+    }
+}
+
 /// Creates a Production struct from the derivations of a rule
 fn create_production(productions: &str) -> Production {
-    Production {
-        output: productions.split(' ').collect(),
-    }
+    Production::new(productions.split(' ').collect())
 }
 
 /// Creates a Rule struct from a line in the grammar file
@@ -46,10 +56,7 @@ fn line_to_rule(line: &str) -> Rule {
         .map(|x| create_production(x))
         .collect();
 
-    Rule {
-        non_terminal: split[0],
-        derivations: prods,
-    }
+    Rule::new(split[0], prods)
 }
 
 /// Calculates the FIRST set of a symbol given the rules of the grammar
