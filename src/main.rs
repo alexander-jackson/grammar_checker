@@ -2,6 +2,7 @@ use std::error::Error;
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::convert::TryFrom;
 
 use std::collections::HashSet;
 
@@ -31,6 +32,21 @@ impl<'a> Rule<'a> {
     }
 }
 
+impl<'a> TryFrom<&'a str> for Rule<'a> {
+    type Error = &'static str;
+
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+        let split: Vec<&str> = value.split(" ::= ").collect();
+
+        let prods: Vec<Production> = split[1]
+            .split(" | ")
+            .map(|x| Production::try_from(x).unwrap())
+            .collect();
+
+        Ok(Rule::new(split[0], prods))
+    }
+}
+
 #[derive(Debug)]
 struct Production<'a> {
     output: Vec<&'a str>,
@@ -42,21 +58,12 @@ impl<'a> Production<'a> {
     }
 }
 
-/// Creates a Production struct from the derivations of a rule
-fn create_production(productions: &str) -> Production {
-    Production::new(productions.split(' ').collect())
-}
+impl<'a> TryFrom<&'a str> for Production<'a> {
+    type Error = &'static str;
 
-/// Creates a Rule struct from a line in the grammar file
-fn line_to_rule(line: &str) -> Rule {
-    let split: Vec<&str> = line.split(" ::= ").collect();
-
-    let prods: Vec<Production> = split[1]
-        .split(" | ")
-        .map(|x| create_production(x))
-        .collect();
-
-    Rule::new(split[0], prods)
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+        Ok(Production::new(value.split(' ').collect()))
+    }
 }
 
 /// Calculates the FIRST set of a symbol given the rules of the grammar
@@ -427,7 +434,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let lines = get_file_lines(contents);
     let joined = join_lines(&lines);
-    let rules: Vec<Rule> = joined.iter().map(|x| line_to_rule(x)).collect();
+    let rules: Vec<Rule> = joined.iter().map(|x| Rule::try_from(&x[..]).unwrap()).collect();
 
     if args.check_first_plus {
         check_first_plus(&rules);
