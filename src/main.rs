@@ -294,6 +294,108 @@ void parse_{}();
     }
 }
 
+fn generate_code<'a>(
+    non_terminal: &str,
+    f_plus: &[HashSet<&str>],
+    derivations: &[Production<'a>],
+    terminals: &[&str],
+    non_terminals: &[&str],
+) {
+    let mut output: String = String::new();
+    let fname: &str = &format!("parse_{}", non_terminal);
+    output.push_str(&format!("void {}() {{\n", fname));
+
+    output.push_str(&format!(
+        "std::cout << \"Calling {}\" << std::endl;",
+        fname
+    ));
+
+    let mut iters = 0;
+
+    for (f, d) in f_plus.iter().zip(derivations.iter()) {
+        // Given that we match any token in f, perform code for d
+        let mut opts: Vec<&str> = Vec::new();
+
+        for x in f.iter() {
+            opts.push(x);
+        }
+
+        let options: String = opts.join(" | ");
+
+        output.push_str(&format!(
+            "\t{}if (match({})) {{\n",
+            if iters > 0 { "else " } else { "" },
+            &options
+        ));
+
+        let logic: String = d
+            .output
+            .iter()
+            .map(|x| {
+                if terminals.contains(x) {
+                    format!("match_terminal({});", x)
+                } else {
+                    format!("parse_{}();\nstd::cout << \"Returned to {}\" << std::endl;", x, fname)
+                }
+            })
+            .collect::<Vec<String>>()
+            .join("\n\t\t");
+
+        output.push_str(&logic);
+        output.push_str("\n\t}\n");
+
+        iters += 1;
+    }
+
+    output.push_str(&format!(
+        "else {{ std::cout << \"Error in {}\" << std::endl;\nexit(1); }}",
+        fname
+    ));
+
+    output.push_str("}\n");
+
+    println!("{}", &output);
+}
+
+fn generate_parser<'a>(rules: &[Rule<'a>], lines: &[String]) {
+    // Get all tokens in the grammar
+    let mut tokens: Vec<&str> = Vec::new();
+
+    for r in rules {
+        if !tokens.contains(&r.non_terminal) {
+            tokens.push(&r.non_terminal);
+        }
+
+        for d in &r.derivations {
+            for t in &d.output {
+                if !tokens.contains(t) {
+                    tokens.push(t);
+                }
+            }
+        }
+    }
+
+    let mut terminals: Vec<&str> = Vec::new();
+    let mut non_terminals: Vec<&str> = Vec::new();
+
+    for t in tokens {
+        match rules.iter().find(|x| x.non_terminal == t) {
+            Some(_) => non_terminals.push(t),
+            None => terminals.push(t),
+        };
+    }
+
+    for nt in &non_terminals {
+        let f_plus = first_plus(&nt, &rules);
+        let derivations = &rules
+            .iter()
+            .find(|x| &x.non_terminal == nt)
+            .unwrap()
+            .derivations;
+        generate_code(&nt, &f_plus, derivations, &terminals, &non_terminals);
+    }
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let mut args = pico_args::Arguments::from_env();
 
@@ -319,6 +421,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let joined = join_lines(&lines);
     let rules: Vec<Rule> = joined.iter().map(|x| line_to_rule(x)).collect();
 
+    // generate_parser(&rules, &joined);
+
     if args.check_first_plus {
         check_first_plus(&rules);
     }
@@ -326,6 +430,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     if let Some(k) = args.key {
         let keys: Vec<&str> = if k.contains(',') {
             k.split(',').map(|x| x.trim()).collect()
+        } else if k == "all" {
+            rules.iter()
+                .map(|x| x.non_terminal)
+                .collect()
         } else {
             vec![&k]
         };
