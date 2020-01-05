@@ -1,10 +1,9 @@
-use std::error::Error;
-use std::fs::OpenOptions;
 use std::io::Write;
+use std::fs::OpenOptions;
+use std::error::Error;
+use std::collections::HashSet;
 
 use colored::*;
-
-use std::collections::HashSet;
 
 use crate::rule::Rule;
 use crate::production::Production;
@@ -289,8 +288,7 @@ fn generate_code<'a>(
                     format!("match_terminal({});", x)
                 } else {
                     format!(
-                        "parse_{}();\n",
-                        x, fname
+                        "parse_{}();\n", x
                     )
                 }
             })
