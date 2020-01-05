@@ -15,6 +15,7 @@ struct Args {
     first_plus: bool,
     check_first_plus: bool,
     show_mappings: bool,
+    parser: bool,
     protos: Option<String>,
 }
 
@@ -298,8 +299,7 @@ fn generate_code<'a>(
     non_terminal: &str,
     f_plus: &[HashSet<&str>],
     derivations: &[Production<'a>],
-    terminals: &[&str],
-    non_terminals: &[&str],
+    terminals: &[&str]
 ) {
     let mut output: String = String::new();
     let fname: &str = &format!("parse_{}", non_terminal);
@@ -357,7 +357,7 @@ fn generate_code<'a>(
     println!("{}", &output);
 }
 
-fn generate_parser<'a>(rules: &[Rule<'a>], lines: &[String]) {
+fn generate_parser<'a>(rules: &[Rule<'a>]) {
     // Get all tokens in the grammar
     let mut tokens: Vec<&str> = Vec::new();
 
@@ -392,7 +392,7 @@ fn generate_parser<'a>(rules: &[Rule<'a>], lines: &[String]) {
             .find(|x| &x.non_terminal == nt)
             .unwrap()
             .derivations;
-        generate_code(&nt, &f_plus, derivations, &terminals, &non_terminals);
+        generate_code(&nt, &f_plus, derivations, &terminals);
     }
 }
 
@@ -407,6 +407,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         first_plus: args.contains("--first_plus"),
         check_first_plus: args.contains("--check_first_plus"),
         show_mappings: args.contains("--show_mappings"),
+        parser: args.contains("--parser"),
         protos: args.opt_value_from_str("--protos")?,
     };
 
@@ -420,8 +421,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let lines = get_file_lines(contents);
     let joined = join_lines(&lines);
     let rules: Vec<Rule> = joined.iter().map(|x| line_to_rule(x)).collect();
-
-    // generate_parser(&rules, &joined);
 
     if args.check_first_plus {
         check_first_plus(&rules);
@@ -464,6 +463,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                 show_mappings(&key, &rules);
             }
         }
+    }
+
+    if args.parser {
+        generate_parser(&rules);
     }
 
     if let Some(f) = args.protos {
