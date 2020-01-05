@@ -8,6 +8,12 @@ use std::collections::HashSet;
 
 use colored::*;
 
+use crate::rule::Rule;
+use crate::production::Production;
+
+pub mod rule;
+pub mod production;
+
 struct Args {
     filename: Option<String>,
     key: Option<String>,
@@ -18,55 +24,6 @@ struct Args {
     show_mappings: bool,
     parser: bool,
     protos: Option<String>,
-}
-
-#[derive(Debug)]
-pub struct Rule<'a> {
-    non_terminal: &'a str,
-    derivations: Vec<Production<'a>>,
-}
-
-impl<'a> Rule<'a> {
-    pub fn new(non_terminal: &'a str, derivations: Vec<Production<'a>>) -> Self {
-        Self {
-            non_terminal,
-            derivations,
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a str> for Rule<'a> {
-    type Error = &'static str;
-
-    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
-        let split: Vec<&str> = value.split(" ::= ").collect();
-
-        let prods: Vec<Production> = split[1]
-            .split(" | ")
-            .map(|x| Production::try_from(x).unwrap())
-            .collect();
-
-        Ok(Rule::new(split[0], prods))
-    }
-}
-
-#[derive(Debug)]
-pub struct Production<'a> {
-    output: Vec<&'a str>,
-}
-
-impl<'a> Production<'a> {
-    pub fn new(output: Vec<&'a str>) -> Self {
-        Self { output }
-    }
-}
-
-impl<'a> TryFrom<&'a str> for Production<'a> {
-    type Error = &'static str;
-
-    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
-        Ok(Production::new(value.split(' ').collect()))
-    }
 }
 
 /// Calculates the FIRST set of a symbol given the rules of the grammar
