@@ -305,10 +305,7 @@ fn generate_code<'a>(
     let fname: &str = &format!("parse_{}", non_terminal);
     output.push_str(&format!("void {}() {{\n", fname));
 
-    output.push_str(&format!(
-        "std::cout << \"Calling {}\" << std::endl;",
-        fname
-    ));
+    output.push_str(&format!("std::cout << \"Calling {}\" << std::endl;", fname));
 
     let mut iters = 0;
 
@@ -335,7 +332,10 @@ fn generate_code<'a>(
                 if terminals.contains(x) {
                     format!("match_terminal({});", x)
                 } else {
-                    format!("parse_{}();\nstd::cout << \"Returned to {}\" << std::endl;", x, fname)
+                    format!(
+                        "parse_{}();\nstd::cout << \"Returned to {}\" << std::endl;",
+                        x, fname
+                    )
                 }
             })
             .collect::<Vec<String>>()
@@ -431,9 +431,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let keys: Vec<&str> = if k.contains(',') {
             k.split(',').map(|x| x.trim()).collect()
         } else if k == "all" {
-            rules.iter()
-                .map(|x| x.non_terminal)
-                .collect()
+            rules.iter().map(|x| x.non_terminal).collect()
         } else {
             vec![&k]
         };
