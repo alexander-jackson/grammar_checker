@@ -1,4 +1,9 @@
-use super::*;
+use std::fs;
+use std::collections::HashSet;
+use std::convert::TryFrom;
+
+use grammar_checker::first;
+use grammar_checker::follow;
 
 static TEST_GRAMMAR_PATH: &str = "test.cfg";
 
@@ -7,8 +12,8 @@ fn first_set_test() {
     let contents =
         fs::read_to_string(TEST_GRAMMAR_PATH).expect("Failed to find the test grammar file.");
 
-    let lines = get_file_lines(contents);
-    let rules: Vec<Rule> = lines.iter().map(|x| line_to_rule(x)).collect();
+    let lines = grammar_checker::get_file_lines(contents);
+    let rules: Vec<grammar_checker::Rule> = lines.iter().map(|x| grammar_checker::Rule::try_from(&x[..]).unwrap()).collect();
 
     let mut expected: HashSet<&str> = HashSet::new();
 
@@ -42,8 +47,8 @@ fn follow_set_test() {
     let contents =
         fs::read_to_string(TEST_GRAMMAR_PATH).expect("Failed to find the test grammar file.");
 
-    let lines = get_file_lines(contents);
-    let rules: Vec<Rule> = lines.iter().map(|x| line_to_rule(x)).collect();
+    let lines = grammar_checker::get_file_lines(contents);
+    let rules: Vec<grammar_checker::Rule> = lines.iter().map(|x| grammar_checker::Rule::try_from(&x[..]).unwrap()).collect();
 
     let mut expected: HashSet<&str> = HashSet::new();
     let mut stack: Vec<&str> = Vec::new();
