@@ -18,4 +18,3 @@ impl<'a> TryFrom<&'a str> for Production<'a> {
         Ok(Production::new(value.split(' ').collect()))
     }
 }
-

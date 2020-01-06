@@ -5,13 +5,13 @@ use std::collections::HashSet;
 
 use colored::*;
 
-use crate::rule::Rule;
-use crate::production::Production;
-
 mod app;
 
-pub mod rule;
 pub mod production;
+pub mod rule;
+
+use crate::production::Production;
+use crate::rule::Rule;
 
 /// Calculates the FIRST set of a symbol given the rules of the grammar
 pub fn first<'a>(symbol: &'a str, rules: &[Rule<'a>]) -> HashSet<&'a str> {
@@ -178,15 +178,13 @@ fn join_lines(lines: &[String]) -> Vec<String> {
         .map(|(i, _l)| i)
         .collect();
 
-    let len = containing.len();
-
-    for c in 0..len - 1 {
+    for c in 0..containing.len() - 1 {
         let (i, j) = (containing[c], containing[c + 1]);
 
         joined.push(lines[i..j].join(" "));
     }
 
-    let last = containing[len - 1];
+    let last = *containing.last().unwrap();
     joined.push(lines[last..lines.len()].join(" "));
 
     joined
@@ -231,11 +229,7 @@ fn generate_prototypes<'a>(path: String, rules: &[Rule<'a>], joined: &[String]) 
         .iter()
         .zip(joined.iter())
         .map(|(r, j)| {
-            format!(
-                r#"// {}
-void parse_{}();
-
-"#,
+            format!("// {}\nvoid parse_{}();\n",
                 j, r.non_terminal
             )
         })
@@ -287,13 +281,11 @@ fn generate_code<'a>(
                 if terminals.contains(x) {
                     format!("match_terminal({});", x)
                 } else {
-                    format!(
-                        "parse_{}();\n", x
-                    )
+                    format!("parse_{}();\n", x)
                 }
             })
             .collect::<Vec<String>>()
-            .join("\n\t\t");
+            .join("");
 
         output.push_str(&logic);
         output.push_str("\n\t}\n");
@@ -353,5 +345,6 @@ fn generate_parser<'a>(rules: &[Rule<'a>]) {
 pub fn main() -> Result<(), Box<dyn Error>> {
     let args = app::parse_args()?;
     app::handle_args(args)?;
+
     Ok(())
 }

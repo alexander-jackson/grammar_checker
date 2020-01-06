@@ -1,6 +1,6 @@
-use std::fs;
-use std::error::Error;
 use std::convert::TryFrom;
+use std::error::Error;
+use std::fs;
 
 use colored::*;
 
