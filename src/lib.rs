@@ -266,12 +266,10 @@ fn generate_code<'a>(
             opts.push(x);
         }
 
-        let options: String = opts.join(" | ");
-
         output.push_str(&format!(
             "\t{}if (match({})) {{\n",
             if iters > 0 { "else " } else { "" },
-            &options
+            opts.join(" | ")
         ));
 
         let logic: String = d
