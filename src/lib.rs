@@ -169,13 +169,10 @@ pub fn get_file_lines(contents: String) -> Vec<String> {
 fn join_lines(lines: &[String]) -> Vec<String> {
     let mut joined: Vec<String> = Vec::new();
 
-    // Get the line numbers that start a rule definition
     let containing: Vec<usize> = lines
         .iter()
         .enumerate()
-        .map(|(i, l)| (i, l.contains("::=")))
-        .filter(|(_i, l)| *l)
-        .map(|(i, _l)| i)
+        .filter_map(|(i, l)| if l.contains("::=") { Some(i) } else { None })
         .collect();
 
     for c in 0..containing.len() - 1 {
