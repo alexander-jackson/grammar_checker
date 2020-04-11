@@ -160,9 +160,13 @@ fn valid_string(x: &str) -> bool {
 pub fn get_file_lines(contents: String) -> Vec<String> {
     contents
         .split('\n')
-        .filter(|x| valid_string(x))
-        .map(|l| l.trim())
-        .map(|l| l.replace("\"", "'"))
+        .filter_map(|l| {
+            if valid_string(l) {
+                Some(l.trim().replace("\"", "'"))
+            } else {
+                None
+            }
+        })
         .collect()
 }
 
