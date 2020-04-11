@@ -1,7 +1,7 @@
-use std::io::Write;
-use std::fs::OpenOptions;
-use std::error::Error;
 use std::collections::HashSet;
+use std::error::Error;
+use std::fs::OpenOptions;
+use std::io::Write;
 
 use colored::*;
 
@@ -228,11 +228,7 @@ fn generate_prototypes<'a>(path: String, rules: &[Rule<'a>], joined: &[String]) 
     let lines: Vec<String> = rules
         .iter()
         .zip(joined.iter())
-        .map(|(r, j)| {
-            format!("// {}\nvoid parse_{}();\n",
-                j, r.non_terminal
-            )
-        })
+        .map(|(r, j)| format!("// {}\nvoid parse_{}();\n", j, r.non_terminal))
         .collect();
 
     let mut file = OpenOptions::new()
