@@ -2,10 +2,10 @@
 name = "grammar_checker"
 version = "0.1.0"
 authors = ["Alexander Jackson <alexanderjackson@protonmail.com>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-colored = "1.8"
-pico-args = "0.3.0"
+colored = "2.0.0"
+pico-args = "0.5.0"
